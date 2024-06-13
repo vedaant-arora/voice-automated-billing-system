@@ -27,6 +27,7 @@ def speak(text):
 def listen():
     with sr.Microphone() as source:
         print("Listening...")
+        speak("speak now")
         audio = recognizer.listen(source)
         try:
             command = recognizer.recognize_google(audio)
@@ -55,26 +56,31 @@ def calculate_daily_sales():
 
 # Function to handle voice input
 def handle_voice_input():
-    speak("The system is now active. Please say the item name and quantity to make a purchase, or say 'stop' to deactivate the system.")
+    speak("The system is now active. Please say the item name and quantity to make a purchase.")
+    total_order_price = 0
     while True:
         command = listen()
         if command:
-            if command.lower() == "stop":
-                speak("The system is now inactive.")
+            if command.lower() in ["stop", "no"]:
+                speak(f"The total price for your order is {total_order_price} rupees.")
                 break
             try:
-                item_name, quantity = command.split()
-                quantity = int(quantity)
-                price = get_item_price(item_name)
-                if price:
-                    total_price = price * quantity
-                    record_sale(item_name, quantity, total_price)
-                    speak(f"The order is {quantity}{item_name}")
-                    speak(f"The total price is {total_price} rupees.")
-                else:
-                    speak("Item not found.")    
+                items = command.split(",")
+                for item in items:
+                    item_name, quantity = item.strip().split()
+                    quantity = int(quantity)
+                    price = get_item_price(item_name)
+                    if price:
+                        item_total_price = price * quantity
+                        total_order_price += item_total_price
+                        record_sale(item_name, quantity, item_total_price)
+                        speak(f"Added {quantity} {item_name}(s) to the order.")
+                    else:
+                        speak(f"Item {item_name} not found.")
+                speak(f"The current total price for your order is {total_order_price} rupees.")
+                speak("Do you want to add anything else?")
             except ValueError:
-                speak("Please provide both item name and quantity.")
+                speak("Please provide both item names and quantities correctly.")
 
 # Function to display daily sales
 def display_daily_sales():

@@ -3,6 +3,7 @@ import pyttsx3
 import mysql.connector
 import tkinter as tk
 from tkinter import messagebox
+from tkinter import ttk
 from datetime import datetime
 
 # Initialize recognizer and TTS engine
@@ -69,10 +70,10 @@ def handle_voice_input():
                 if price:
                     total_price = price * quantity
                     record_sale(item_name, quantity, total_price)
-                    speak(f"The order is {quantity}{item_name}")
                     speak(f"The total price is {total_price} rupees.")
+                    update_sales_table()
                 else:
-                    speak("Item not found.")    
+                    speak("Item not found.")
             except ValueError:
                 speak("Please provide both item name and quantity.")
 
@@ -82,10 +83,19 @@ def display_daily_sales():
     speak(f"The total sales for today are {total_sales} rupees.")
     messagebox.showinfo("Daily Sales", f"The total sales for today are {total_sales} rupees.")
 
+# Function to update the sales table
+def update_sales_table():
+    for row in sales_table.get_children():
+        sales_table.delete(row)
+    cursor.execute("SELECT item_name, price, quantity, sale_id FROM sales JOIN items ON sales.item_id = items.item_id WHERE sale_date = CURDATE()")
+    rows = cursor.fetchall()
+    for row in rows:
+        sales_table.insert("", tk.END, values=row)
+
 # Create the main window
 root = tk.Tk()
 root.title("Cafeteria Billing System")
-root.geometry("400x200")
+root.geometry("600x400")
 
 # Create GUI elements
 title_label = tk.Label(root, text="Cafeteria Billing System", font=("Arial", 16))
@@ -99,6 +109,15 @@ daily_sales_button.pack(pady=10)
 
 exit_button = tk.Button(root, text="Exit", command=root.quit, font=("Arial", 12))
 exit_button.pack(pady=10)
+
+# Create the sales table
+columns = ("item_name", "price", "quantity", "sale_id")
+sales_table = ttk.Treeview(root, columns=columns, show="headings")
+sales_table.heading("item_name", text="Item Name")
+sales_table.heading("price", text="Price")
+sales_table.heading("quantity", text="Quantity")
+sales_table.heading("sale_id", text="Sale ID")
+sales_table.pack(pady=20, fill=tk.BOTH, expand=True)
 
 # Run the main loop
 root.mainloop()
