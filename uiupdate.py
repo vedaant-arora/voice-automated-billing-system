@@ -1,8 +1,13 @@
 import speech_recognition as sr
+import os
 import pyttsx3
 import mysql.connector
 import customtkinter as ctk
 from tkinter import messagebox
+from datetime import *
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
+from reportlab.lib import colors
 
 # Initialize recognizer and TTS engine
 recognizer = sr.Recognizer()
@@ -53,15 +58,49 @@ def calculate_daily_sales():
     result = cursor.fetchone()
     return result[0] if result else 0
 
+import os
+
+def generate_pdf_bill(order_items, total_price):
+    # Create a list of data for the table
+    data = [["Item", "Quantity", "Price"]]
+    for item_name, quantity, price in order_items:
+        data.append([item_name, str(quantity), str(price)])
+    data.append(["", "", ""])
+    data.append(["Total", "", str(total_price)])
+
+    # Create a PDF document
+    doc = SimpleDocTemplate("bill.pdf", pagesize=letter)
+    elements = []
+
+    # Create a table from the data
+    table = Table(data)
+    style = TableStyle([('BACKGROUND', (0,0), (-1,0), colors.grey),
+                        ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
+                        ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+                        ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+                        ('BOTTOMPADDING', (0,0), (-1,0), 12),
+                        ('BACKGROUND', (0,1), (-1,-1), colors.beige),
+                        ('GRID', (0,0), (-1,-1), 1, colors.black)])
+    table.setStyle(style)
+    elements.append(table)
+
+    # Build the PDF document
+    doc.build(elements)
+    speak(f"PDF bill generated for your order with a total price of {total_price} rupees.")
+
+    # Open the generated PDF file
+    os.startfile("bill.pdf")
 # Function to handle voice input
 def handle_voice_input():
     speak("The system is now active. Please say the item name and quantity to make a purchase.")
+    order_items = []
     total_order_price = 0
     while True:
         command = listen()
         if command:
             if command.lower() in ["stop", "no"]:
-                speak(f"The total price for your order is {total_order_price} rupees.")
+                if order_items:
+                    generate_pdf_bill(order_items, total_order_price)
                 break
             try:
                 items = command.split(",")
@@ -72,6 +111,7 @@ def handle_voice_input():
                     if price:
                         item_total_price = price * quantity
                         total_order_price += item_total_price
+                        order_items.append((item_name, quantity, item_total_price))
                         record_sale(item_name, quantity, item_total_price)
                         speak(f"Added {quantity} {item_name}(s) to the order.")
                     else:
@@ -86,7 +126,6 @@ def display_daily_sales():
     total_sales = calculate_daily_sales()
     speak(f"The total sales for today are {total_sales} rupees.")
     messagebox.showinfo("Daily Sales", f"The total sales for today are {total_sales} rupees.")
-
 # Create the main window
 ctk.set_appearance_mode("dark")  # Modes: "light", "dark", "system"
 ctk.set_default_color_theme("dark-blue")  # Themes: "blue", "dark-blue", "green"
