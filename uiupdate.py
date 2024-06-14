@@ -3,7 +3,6 @@ import pyttsx3
 import mysql.connector
 import customtkinter as ctk
 from tkinter import messagebox
-from PIL import Image, ImageTk
 
 # Initialize recognizer and TTS engine
 recognizer = sr.Recognizer()
@@ -27,6 +26,7 @@ def speak(text):
 def listen():
     with sr.Microphone() as source:
         print("Listening...")
+        speak("speak now")
         audio = recognizer.listen(source)
         try:
             command = recognizer.recognize_google(audio)
@@ -95,15 +95,6 @@ root = ctk.CTk()
 root.title("Cafeteria Billing System")
 root.geometry("600x400")
 root.configure(bg="black")
-
-# Load and display the image
-image_path = "C:/Users/mailv/Desktop/blind relief/blind_relief_association_logo.png"
-image = Image.open(image_path)
-image = image.resize((100, 100), Image.LANCZOS)  # Use Image.LANCZOS instead of Image.ANTIALIAS
-photo = ImageTk.PhotoImage(image)
-
-image_label = ctk.CTkLabel(root, image=photo, text="")
-image_label.place(x=10, y=10)
 
 # Create a frame for side buttons
 side_frame = ctk.CTkFrame(root, width=150)
