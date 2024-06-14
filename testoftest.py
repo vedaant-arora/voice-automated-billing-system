@@ -32,6 +32,7 @@ def speak(text):
 def listen():
     with sr.Microphone() as source:
         status_label.configure(text="Listening...")
+        speak("speak now")
         audio = recognizer.listen(source)
         try:
             command = recognizer.recognize_google(audio)
@@ -126,10 +127,11 @@ def handle_voice_input():
                     order_items.append((item_name, quantity, item_total_price))
                     record_sale(item_name, quantity, item_total_price)
                     speak(f"Added {quantity} {item_name}(s) to the order.")
+                    update_bill_preview(order_items, total_order_price)
                 else:
                     speak(f"Item {item_name} not found.")
                 speak(f"The current total price for your order is {total_order_price} rupees.")
-                speak("Do you want to add anything else?")
+                speak("Do you want to add anything else or generate bill?")
             except ValueError:
                 speak("Please provide both item names and quantities correctly.")
 
@@ -161,6 +163,7 @@ def update_bill_preview(order_items, total_price):
         bill_preview.insert("end", f"{item_name}\t{quantity}\t\t{price}\n")
     bill_preview.insert("end", "-" * 30 + "\n")
     bill_preview.insert("end", f"Total:\t\t\t{total_price}\n")
+
 
 # Create the main window
 ctk.set_appearance_mode("dark")
