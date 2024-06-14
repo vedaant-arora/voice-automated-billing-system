@@ -1,5 +1,6 @@
 import speech_recognition as sr
 import os
+import functools
 import pyttsx3
 import mysql.connector
 import customtkinter as ctk
@@ -121,6 +122,9 @@ def handle_voice_input():
             except ValueError:
                 speak("Please provide both item names and quantities correctly.")
 
+def trigger_voice_input(button, event):
+    button.invoke()
+
 # Function to display daily sales
 def display_daily_sales():
     total_sales = calculate_daily_sales()
@@ -142,6 +146,7 @@ side_frame.pack(side="left", fill="y", padx=10, pady=10)
 # Create buttons and add them to the side frame
 voice_input_button = ctk.CTkButton(side_frame, text="Start Voice Input", command=handle_voice_input, font=("Arial", 12), fg_color="white", text_color="black")
 voice_input_button.pack(pady=10)
+root.bind('<space>', functools.partial(trigger_voice_input, voice_input_button))
 
 daily_sales_button = ctk.CTkButton(side_frame, text="Calculate Daily Sales", command=display_daily_sales, font=("Arial", 12), fg_color="white", text_color="black")
 daily_sales_button.pack(pady=10)
