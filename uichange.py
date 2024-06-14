@@ -27,6 +27,7 @@ def speak(text):
 def listen():
     with sr.Microphone() as source:
         print("Listening...")
+        speak("speak now")
         audio = recognizer.listen(source)
         try:
             command = recognizer.recognize_google(audio)
