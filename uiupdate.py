@@ -132,7 +132,7 @@ def display_daily_sales():
     messagebox.showinfo("Daily Sales", f"The total sales for today are {total_sales} rupees.")
 # Create the main window
 ctk.set_appearance_mode("dark")  # Modes: "light", "dark", "system"
-ctk.set_default_color_theme("dark-blue")  # Themes: "blue", "dark-blue", "green"
+ctk.set_default_color_theme("green")  # Themes: "blue", "dark-blue", "green"
 
 root = ctk.CTk()
 root.title("Cafeteria Billing System")
