@@ -18,7 +18,7 @@ tts_engine = pyttsx3.init()
 db = mysql.connector.connect(
     host="localhost",
     user="root",
-    password="abcdefgh",
+    password="3007",
     database="cafeteria"
 )
 cursor = db.cursor()
@@ -37,7 +37,7 @@ def listen():
         try:
             command = recognizer.recognize_google(audio)
             status_label.configure(text=f"User said: {command}")
-            print(f"User said: {command}")
+            print(f"User said: {command}")  
             return command
         except sr.UnknownValueError:
             status_label.configure(text="Sorry, I did not understand that.")
