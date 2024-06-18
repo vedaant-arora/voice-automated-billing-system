@@ -9,6 +9,8 @@ from datetime import *
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
 from reportlab.lib import colors
+import tkinter.simpledialog as simpledialog
+
 
 # Initialize recognizer and TTS engine
 recognizer = sr.Recognizer()
@@ -135,13 +137,26 @@ def handle_voice_input():
             except ValueError:
                 speak("Please provide both item names and quantities correctly.")
 
+def add_item_to_database():
+    item_name = simpledialog.askstring("Add Item", "Enter the item name:")
+    if item_name:
+        item_price = simpledialog.askfloat("Add Item", "Enter the item price:")
+        if item_price:
+            try:
+                cursor.execute("INSERT INTO items (item_name, price) VALUES (%s, %s)", (item_name, item_price))
+                db.commit()
+                speak(f"Item '{item_name}' with price {item_price} has been added to the database.")
+            except mysql.connector.Error as error:
+                speak(f"Error adding item to the database: {error}")
+
+
 def trigger_voice_input(button, event):
     button.invoke()
 
 def generate_bill_button():
     global order_items, total_order_price
     if order_items:
-        update_bill_preview(order_items, total_order_price)
+        update_bill_preview(order_items, total_order_price) 
         generate_pdf_bill(order_items, total_order_price)
         order_items = []
         total_order_price = 0
@@ -197,6 +212,9 @@ root.bind('<space>', functools.partial(trigger_voice_input, voice_input_button))
 
 daily_sales_button = ctk.CTkButton(side_frame, text="Calculate Daily Sales", command=display_daily_sales, font=("Arial", 12), fg_color="white", text_color="black")
 daily_sales_button.pack(pady=10)
+
+add_item_button = ctk.CTkButton(side_frame, text="Add Item", command=add_item_to_database, font=("Arial", 12), fg_color="white", text_color="black")
+add_item_button.pack(pady=10)
 
 exit_button = ctk.CTkButton(side_frame, text="Exit", command=root.quit, font=("Arial", 12), fg_color="white", text_color="black")
 exit_button.pack(pady=10)
