@@ -35,6 +35,7 @@ def speak(text):
 def listen():
     with sr.Microphone() as source:
         status_label.configure(text="Listening...")
+        speak("speak now")
         audio = recognizer.listen(source)
         try:
             command = recognizer.recognize_google(audio)
@@ -181,7 +182,7 @@ def display_daily_sales():
 
         # Save the DataFrame to an Excel file
         today = datetime.today().date()
-        file_name = f'sales_report_{today.strftime("%Y%m%d")}.xlsx'
+        file_name = f'sales_report_{today.strftime("%d-%m-%Y")}.xlsx'
         sales_report.to_excel(file_name, index=False, header=True)
 
         # Get the last row and column of the data
