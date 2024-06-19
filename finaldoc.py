@@ -107,7 +107,7 @@ def generate_pdf_bill(order_items, total_price):
 # Function to handle voice input
 def handle_voice_input():
     global order_items, total_order_price
-    speak("The system is now active. Please say the item name and quantity to make a purchase, or say 'generate bill' to generate the bill.")
+    speak("The system is now active. Please say the item name and quantity to make a purchase, or say 'generate bill' to generate the bill. Press 'F' to generate the daily sales report")
     order_items = []
     total_order_price = 0
     while True:
@@ -216,6 +216,10 @@ def update_bill_preview(order_items, total_price):
         bill_preview.insert("end", f"{item_name}\t{quantity}\t\t{price}\n")
     bill_preview.insert("end", "-" * 30 + "\n")
     bill_preview.insert("end", f"Total:\t\t\t{total_price}\n")
+    
+def trigger_daily_sales(button, event):
+    button.invoke()
+    
 
 # Create the main window
 ctk.set_appearance_mode("dark")
@@ -249,6 +253,8 @@ root.bind('<space>', functools.partial(trigger_voice_input, voice_input_button))
 
 daily_sales_button = ctk.CTkButton(side_frame, text="Calculate Daily Sales", command=display_daily_sales, font=("Arial", 12), fg_color="white", text_color="black")
 daily_sales_button.pack(pady=10)
+root.bind('<f>', functools.partial(trigger_daily_sales, daily_sales_button))
+
 
 add_item_button = ctk.CTkButton(side_frame, text="Add Item", command=add_item_to_database, font=("Arial", 12), fg_color="white", text_color="black")
 add_item_button.pack(pady=10)
