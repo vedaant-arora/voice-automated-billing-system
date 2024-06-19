@@ -128,19 +128,18 @@ def handle_voice_input():
                     speak(f"The total price for your order is {total_order_price} rupees.")
                 break
             try:
-                items = command.split(",")
-                for item in items:
-                    item_name, quantity = item.strip().split()
-                    quantity = int(quantity)
-                    price = get_item_price(item_name)
-                    if price:
-                        item_total_price = price * quantity
-                        total_order_price += item_total_price
-                        order_items.append((item_name, quantity, item_total_price))
-                        record_sale(item_name, quantity, item_total_price)
-                        speak(f"Added {quantity} {item_name}(s) to the order.")
-                        update_bill_preview(order_items, total_order_price)
-                    else:
+                items = command.split()  
+                item_name = ' '.join(items[:-1])
+                quantity = int(items[-1])
+                price = get_item_price(item_name)
+                if price:
+                    item_total_price = price * quantity
+                    total_order_price += item_total_price
+                    order_items.append((item_name, quantity, item_total_price))
+                    record_sale(item_name, quantity, item_total_price)
+                    speak(f"Added {quantity} {item_name}(s) to the order.")
+                    update_bill_preview(order_items, total_order_price)
+                else:
                         speak(f"Item {item_name} not found.")
                 speak(f"The current total price for your order is {total_order_price} rupees.")
                 speak("Do you want to add anything else or generate bill?")
