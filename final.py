@@ -10,7 +10,7 @@ import pandas as pd
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
 from reportlab.lib import colors
-from openpyxl import Workbook
+import openpyxl
 from openpyxl.utils import get_column_letter
 
 # Initialize recognizer and TTS engine
@@ -176,36 +176,24 @@ def display_daily_sales():
     sales_data, total_sales = calculate_daily_sales()
     if sales_data:
         # Create a DataFrame from the sales data
-        columns = ['Item', 'Total Quantity', 'Total Sales']
-        sales_report = pd.DataFrame(sales_data, columns=columns)
+        df = pd.DataFrame(sales_data, columns=['Item', 'Total Quantity', 'Total Sales'])
+
+        # Add the total sales row to the DataFrame
+        total_sales_row = pd.Series({'Item': 'Total Sales', 'Total Quantity': df['Total Quantity'].sum(), 'Total Sales': total_sales})
+        df.loc[len(df)] = total_sales_row
 
         # Save the DataFrame to an Excel file
         today = datetime.today().date()
         file_name = f'sales_report_{today.strftime("%d-%m-%Y")}.xlsx'
-        sales_report.to_excel(file_name, index=False, header=True)
+        df.to_excel(file_name, index=False, header=True)
 
-        # Get the last row and column of the data
-        last_row = len(sales_report) + 2
-        last_column = get_column_letter(len(sales_report.columns))
-
-        # Add the SUM formula to the last row
-        wb = Workbook()
-        ws = wb.active
-        ws.append([''] + list(sales_report.columns))
-        for row in sales_report.itertuples(index=False):
-            ws.append(list(row))
-        sum_formula = f'=SUM({last_column}2:{last_column}{last_row - 1})'
-        ws[f'{last_column}{last_row}'] = sum_formula
-
-        # Save the updated workbook
-        wb.save(file_name)
-
-        speak(f"Total sales for {today.strftime('%Y-%m-%d')} is {total_sales} rupees.")
+        speak(f"Total sales for {today.strftime('%d-%m-%Y')} is {total_sales} rupees.")
 
         # Open the generated Excel file
         os.startfile(file_name)
     else:
         speak("No sales data available for today.")
+        
 
 def update_bill_preview(order_items, total_price):
     bill_preview.delete("1.0", "end")  # Clear the previous bill preview
@@ -254,6 +242,7 @@ daily_sales_button = ctk.CTkButton(side_frame, text="Calculate Daily Sales", com
 daily_sales_button.pack(pady=10)
 root.bind('<f>', functools.partial(trigger_daily_sales, daily_sales_button))
 
+root.bind('<f>', functools.partial(trigger_daily_sales, daily_sales_button))
 add_item_button = ctk.CTkButton(side_frame, text="Add Item", command=add_item_to_database, font=("Arial", 12), fg_color="white", text_color="black")
 add_item_button.pack(pady=10)
 
