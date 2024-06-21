@@ -12,6 +12,29 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
 from reportlab.lib import colors
 import openpyxl
 from openpyxl.utils import get_column_letter
+from AppOpener import close, open
+import psutil
+import subprocess
+
+def get_pid(name):
+    for proc in psutil.process_iter(['name']):
+        if proc.info['name'] == name:
+            return proc.pid
+    return None
+
+def kill_task(name):
+    pid = get_pid(name)
+    if pid:
+        os.kill(pid, 9)
+        print(f"Task '{name}' (PID: {pid}) has been killed.")
+    else:
+        print(f"Task '{name}' not found.")
+
+def run_task(name):
+    subprocess.Popen(name)
+    print(f"Task '{name}' has been started.")
+
+kill_task("nvda.exe")
 
 # Initialize recognizer and TTS engine
 recognizer = sr.Recognizer()
@@ -208,6 +231,9 @@ def update_bill_preview(order_items, total_price):
 def trigger_daily_sales(button, event):
     button.invoke()
 
+def trigger_exit(button, event):
+    button.invoke()
+
 # Create the main window
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("green")
@@ -240,6 +266,7 @@ root.bind('<space>', functools.partial(trigger_voice_input, voice_input_button))
 
 daily_sales_button = ctk.CTkButton(side_frame, text="Calculate Daily Sales", command=display_daily_sales, font=("Arial", 12), fg_color="white", text_color="black")
 daily_sales_button.pack(pady=10)
+root.bind('<f>', functools.partial(trigger_daily_sales, daily_sales_button))
 
 root.bind('<f>', functools.partial(trigger_daily_sales, daily_sales_button))
 add_item_button = ctk.CTkButton(side_frame, text="Add Item", command=add_item_to_database, font=("Arial", 12), fg_color="white", text_color="black")
@@ -247,6 +274,7 @@ add_item_button.pack(pady=10)
 
 exit_button = ctk.CTkButton(side_frame, text="Exit", command=root.quit, font=("Arial", 12), fg_color="white", text_color="black")
 exit_button.pack(pady=10)
+root.bind('<j>', functools.partial(trigger_exit, exit_button) )
 
 # Create the "Generate Bill" button
 generate_bill_button = ctk.CTkButton(right_frame, text="Generate Bill", command=generate_bill_button, font=("Arial", 12), fg_color="white", text_color="black")
@@ -254,3 +282,4 @@ generate_bill_button.pack(pady=10)
 
 # Run the main loop
 root.mainloop()
+os.startfile("C:/Program Files (x86)/NVDA/nvda.exe")
