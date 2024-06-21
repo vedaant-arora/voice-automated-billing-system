@@ -4,14 +4,14 @@ import functools
 import pyttsx3
 import mysql.connector
 import customtkinter as ctk
-from tkinter import messagebox
-from datetime import *
+from tkinter import messagebox, simpledialog
+from datetime import datetime
+import pandas as pd
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
 from reportlab.lib import colors
-import tkinter.simpledialog as simpledialog
-import openpyxl
-
+from openpyxl import Workbook
+from openpyxl.utils import get_column_letter
 
 # Initialize recognizer and TTS engine
 recognizer = sr.Recognizer()
@@ -40,7 +40,7 @@ def listen():
         try:
             command = recognizer.recognize_google(audio)
             status_label.configure(text=f"User said: {command}")
-            print(f"User said: {command}")  
+            print(f"User said: {command}")
             return command
         except sr.UnknownValueError:
             status_label.configure(text="Sorry, I did not understand that.")
@@ -60,16 +60,17 @@ def record_sale(item_name, quantity, total_price):
 
 # Function to calculate daily sales
 def calculate_daily_sales():
-    cursor.execute("SELECT SUM(total_price) FROM sales WHERE sale_date = CURDATE()")
-    result = cursor.fetchone()
-    return result[0] if result else 0
-
-def save_daily_sales_to_excel(total_sales):
-    # Create or load an Excel workbook
-    try:
-        workbook = openpyxl.load_workbook('daily_sales.xlsx')
-    except FileNotFoundError:
-        workbook = openpyxl.Workbook()
+    today = datetime.today().date()
+    cursor.execute("""
+        SELECT i.item_name, SUM(s.quantity) AS total_quantity, SUM(s.quantity * i.price) AS total_sales
+        FROM sales s
+        JOIN items i ON s.item_id = i.item_id
+        WHERE s.sale_date = %s
+        GROUP BY i.item_name
+    """, (today,))
+    sales_data = cursor.fetchall()
+    total_sales = sum(row[2] for row in sales_data)
+    return sales_data, total_sales
 
 # Function to generate PDF bill
 def generate_pdf_bill(order_items, total_price):
@@ -157,14 +158,19 @@ def add_item_to_database():
             except mysql.connector.Error as error:
                 speak(f"Error adding item to the database: {error}")
 
-
 def trigger_voice_input(button, event):
+    button.invoke()
+
+def exit_system(button, event):
+    button.invoke()
+
+def daily_sales(button, event):
     button.invoke()
 
 def generate_bill_button():
     global order_items, total_order_price
     if order_items:
-        update_bill_preview(order_items, total_order_price) 
+        update_bill_preview(order_items, total_order_price)
         generate_pdf_bill(order_items, total_order_price)
         order_items = []
         total_order_price = 0
@@ -173,9 +179,39 @@ def generate_bill_button():
 
 # Function to display daily sales
 def display_daily_sales():
-    total_sales = calculate_daily_sales()
-    speak(f"The total sales for today are {total_sales} rupees.")
-    messagebox.showinfo("Daily Sales", f"The total sales for today are {total_sales} rupees.")
+    sales_data, total_sales = calculate_daily_sales()
+    if sales_data:
+        # Create a DataFrame from the sales data
+        columns = ['Item', 'Total Quantity', 'Total Sales']
+        sales_report = pd.DataFrame(sales_data, columns=columns)
+
+        # Save the DataFrame to an Excel file
+        today = datetime.today().date()
+        file_name = f'sales_report_{today.strftime("%d-%m-%Y")}.xlsx'
+        sales_report.to_excel(file_name, index=False, header=True)
+
+        # Get the last row and column of the data
+        last_row = len(sales_report) + 2
+        last_column = get_column_letter(len(sales_report.columns))
+
+        # Add the SUM formula to the last row
+        wb = Workbook()
+        ws = wb.active
+        ws.append([''] + list(sales_report.columns))
+        for row in sales_report.itertuples(index=False):
+            ws.append(list(row))
+        sum_formula = f'=SUM({last_column}2:{last_column}{last_row - 1})'
+        ws[f'{last_column}{last_row}'] = sum_formula
+
+        # Save the updated workbook
+        wb.save(file_name)
+
+        speak(f"Total sales for {today.strftime('%Y-%m-%d')} is {total_sales} rupees.")
+
+        # Open the generated Excel file
+        os.startfile(file_name)
+    else:
+        speak("No sales data available for today.")
 
 def update_bill_preview(order_items, total_price):
     bill_preview.delete("1.0", "end")  # Clear the previous bill preview
@@ -186,7 +222,6 @@ def update_bill_preview(order_items, total_price):
         bill_preview.insert("end", f"{item_name}\t{quantity}\t\t{price}\n")
     bill_preview.insert("end", "-" * 30 + "\n")
     bill_preview.insert("end", f"Total:\t\t\t{total_price}\n")
-
 
 # Create the main window
 ctk.set_appearance_mode("dark")
@@ -220,12 +255,14 @@ root.bind('<space>', functools.partial(trigger_voice_input, voice_input_button))
 
 daily_sales_button = ctk.CTkButton(side_frame, text="Calculate Daily Sales", command=display_daily_sales, font=("Arial", 12), fg_color="white", text_color="black")
 daily_sales_button.pack(pady=10)
+root.bind('<f>', functools.partial(daily_sales, daily_sales_button) )
 
 add_item_button = ctk.CTkButton(side_frame, text="Add Item", command=add_item_to_database, font=("Arial", 12), fg_color="white", text_color="black")
 add_item_button.pack(pady=10)
 
 exit_button = ctk.CTkButton(side_frame, text="Exit", command=root.quit, font=("Arial", 12), fg_color="white", text_color="black")
 exit_button.pack(pady=10)
+root.bind('<j>',functools.partial(exit_system, exit_button))
 
 # Create the "Generate Bill" button
 generate_bill_button = ctk.CTkButton(right_frame, text="Generate Bill", command=generate_bill_button, font=("Arial", 12), fg_color="white", text_color="black")

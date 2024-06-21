@@ -219,8 +219,10 @@ def update_bill_preview(order_items, total_price):
     
 def trigger_daily_sales(button, event):
     button.invoke()
-    
 
+def exit(button, event):
+    button.invoke()
+    
 # Create the main window
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("green")
@@ -261,6 +263,7 @@ add_item_button.pack(pady=10)
 
 exit_button = ctk.CTkButton(side_frame, text="Exit", command=root.quit, font=("Arial", 12), fg_color="white", text_color="black")
 exit_button.pack(pady=10)
+root.bind('<j>', functools.partial(exit, exit_button))
 
 # Create the "Generate Bill" button
 generate_bill_button = ctk.CTkButton(right_frame, text="Generate Bill", command=generate_bill_button, font=("Arial", 12), fg_color="white", text_color="black")

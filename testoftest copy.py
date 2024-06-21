@@ -5,12 +5,13 @@ import pyttsx3
 import mysql.connector
 import customtkinter as ctk
 from tkinter import messagebox
-from datetime import *
+from datetime import date
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
 from reportlab.lib import colors
 import tkinter.simpledialog as simpledialog
-import openpyxl
+import pandas as pd
+
 
 
 # Initialize recognizer and TTS engine
@@ -21,7 +22,7 @@ tts_engine = pyttsx3.init()
 db = mysql.connector.connect(
     host="localhost",
     user="root",
-    password="3007",
+    password="abcdefgh",
     database="cafeteria"
 )
 cursor = db.cursor()
@@ -40,7 +41,7 @@ def listen():
         try:
             command = recognizer.recognize_google(audio)
             status_label.configure(text=f"User said: {command}")
-            print(f"User said: {command}")  
+            print(f"User said: {command}")
             return command
         except sr.UnknownValueError:
             status_label.configure(text="Sorry, I did not understand that.")
@@ -63,13 +64,6 @@ def calculate_daily_sales():
     cursor.execute("SELECT SUM(total_price) FROM sales WHERE sale_date = CURDATE()")
     result = cursor.fetchone()
     return result[0] if result else 0
-
-def save_daily_sales_to_excel(total_sales):
-    # Create or load an Excel workbook
-    try:
-        workbook = openpyxl.load_workbook('daily_sales.xlsx')
-    except FileNotFoundError:
-        workbook = openpyxl.Workbook()
 
 # Function to generate PDF bill
 def generate_pdf_bill(order_items, total_price):
@@ -176,6 +170,33 @@ def display_daily_sales():
     total_sales = calculate_daily_sales()
     speak(f"The total sales for today are {total_sales} rupees.")
     messagebox.showinfo("Daily Sales", f"The total sales for today are {total_sales} rupees.")
+
+def display_daily_sales():
+    # Get today's date
+    today = date.today()
+
+    # Fetch daily sales data from the database
+    cursor.execute("""
+        SELECT i.item_name, SUM(s.quantity) AS total_quantity, SUM(s.total_price) AS total_sales
+        FROM sales s
+        JOIN items i ON s.item_id = i.item_id
+        WHERE s.sale_date = %s
+        GROUP BY i.item_name
+    """, (today,))
+    sales_data = cursor.fetchall()
+
+    # Create a DataFrame from the sales data
+    columns = ['Item', 'Total Quantity', 'Total Sales']
+    sales_report = pd.DataFrame(sales_data, columns=columns)
+
+    # Save the DataFrame to an Excel file
+    file_name = f'sales_report_{today.strftime("%Y%m%d")}.xlsx'
+    sales_report.to_excel(file_name, index=False, header=True)
+
+    speak(f"Sales report for {today.strftime('%Y-%m-%d')} has been generated.")
+
+    # Open the generated Excel file
+    os.startfile(file_name)
 
 def update_bill_preview(order_items, total_price):
     bill_preview.delete("1.0", "end")  # Clear the previous bill preview
