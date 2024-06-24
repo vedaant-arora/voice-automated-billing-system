@@ -15,6 +15,7 @@ from openpyxl.utils import get_column_letter
 from AppOpener import close, open
 import psutil
 import subprocess
+import atexit
 
 def get_pid(name):
     for proc in psutil.process_iter(['name']):
@@ -75,6 +76,10 @@ def get_item_price(item_name):
     cursor.execute("SELECT price FROM items WHERE item_name = %s", (item_name,))
     result = cursor.fetchone()
     return result[0] if result else None
+
+# Function to start nvda on exit 
+def start_nvda_on_exit():
+    os.startfile("C:/Program Files (x86)/NVDA/nvda.exe")
 
 # Function to record sale in database
 def record_sale(item_name, quantity, total_price):
@@ -276,10 +281,10 @@ exit_button = ctk.CTkButton(side_frame, text="Exit", command=root.quit, font=("A
 exit_button.pack(pady=10)
 root.bind('<j>', functools.partial(trigger_exit, exit_button) )
 
-# Create the "Generate Bill" button
+# Create the "Generate Bill" button 
 generate_bill_button = ctk.CTkButton(right_frame, text="Generate Bill", command=generate_bill_button, font=("Arial", 12), fg_color="white", text_color="black")
 generate_bill_button.pack(pady=10)
 
+atexit.register(start_nvda_on_exit)
 # Run the main loop
 root.mainloop()
-os.startfile("C:/Program Files (x86)/NVDA/nvda.exe")
