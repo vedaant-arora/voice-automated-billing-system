@@ -135,7 +135,7 @@ def generate_pdf_bill(order_items, total_price):
 # Function to handle voice input
 def handle_voice_input():
     global order_items, total_order_price
-    speak("The system is now active. Please say the item name and quantity to make a purchase, or say 'generate bill' to generate the bill.")
+    speak("Please say the item name and quantity to make a purchase, or say 'generate bill' to generate the bill.")
     order_items = []
     total_order_price = 0
     while True:
@@ -247,6 +247,8 @@ root.title("Cafeteria Billing System")
 root.geometry("600x400")
 root.configure(bg="black")
 
+root.attributes('-fullscreen',True)
+speak("system is now active")
 # Create a frame for side buttons
 side_frame = ctk.CTkFrame(root, width=150)
 side_frame.pack(side="left", fill="y", padx=10, pady=10)
