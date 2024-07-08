@@ -218,7 +218,6 @@ def display_daily_sales():
         speak(f"Total sales for {today.strftime('%d-%m-%Y')} is {total_sales} rupees.")
 
         # Open the generated Excel file
-        os.startfile(file_name)
     else:
         speak("No sales data available for today.")
         
