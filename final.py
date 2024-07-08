@@ -55,22 +55,25 @@ def speak(text):
     tts_engine.say(text)
     tts_engine.runAndWait()
 
-# Function to listen to voice input
 def listen():
     with sr.Microphone() as source:
         status_label.configure(text="Listening...")
         speak("speak now")
-        audio = recognizer.listen(source)
+        recognizer.adjust_for_ambient_noise(source, duration=0.5)
         try:
-            command = recognizer.recognize_google(audio)
-            status_label.configure(text=f"User said: {command}")
-            print(f"User said: {command}")
-            return command
-        except sr.UnknownValueError:
-            status_label.configure(text="Sorry, I did not understand that.")
-            speak("Sorry, I did not understand that.")
+            audio = recognizer.listen(source, timeout=5, phrase_time_limit=5)
+            try:
+                command = recognizer.recognize_google(audio)
+                status_label.configure(text=f"User said: {command}")
+                print(f"User said: {command}")
+                return command
+            except sr.UnknownValueError:
+                status_label.configure(text="Sorry, I did not understand that.")
+                speak("Sorry, I did not understand that.")
+                return None
+        except sr.WaitTimeoutError:
+            status_label.configure(text="Listening timed out.")
             return None
-
 # Function to get item price from database
 def get_item_price(item_name):
     cursor.execute("SELECT price FROM items WHERE item_name = %s", (item_name,))
