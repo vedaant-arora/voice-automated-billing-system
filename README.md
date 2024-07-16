@@ -1,1 +1,1 @@
-# blind-system-billing
+# Billing system for the visually impaired
